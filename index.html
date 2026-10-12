@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรแกรมภาษีทันตแพทย์ข้าราชการ</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+        .container { width: 100%; max-width: 450px; background-color: #0f172a; position: relative; }
+        .header { text-align: center; margin-bottom: 20px; position: relative; }
+        .header h1 { font-size: 22px; font-weight: 800; color: #ffffff; }
+        .header p { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        
+        .dark-card { background-color: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 16px; margin-bottom: 16px; position: relative; overflow: hidden; }
+        .dark-card h3 { font-size: 14px; font-weight: 700; color: #38bdf8; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+        .input-dark, .select-dark { width: 100%; background-color: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 10px; color: #f8fafc; font-size: 14px; font-weight: 600; }
+        .input-dark::placeholder { color: #475569; opacity: 1; }
+        .row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .checkbox-container { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .checkbox-container input { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
+        .checkbox-container label { font-size: 12px; color: #e2e8f0; cursor: pointer; }
+        .month-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background-color: #0f172a; padding: 12px; border-radius: 12px; border: 1px solid #475569; margin-top: 8px; }
+        .month-item { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+        .month-item span { font-size: 12px; color: #94a3b8; }
+        .month-input { width: 100px; background-color: #0f172a; border: 1px solid #475569; border-radius: 6px; padding: 4px; color: #fff; text-align: right; font-size: 12px; }
+        .month-input::placeholder { color: #475569; }
+        .btn-calc { width: 100%; background-color: #2563eb; color: #ffffff; font-weight: 700; font-size: 16px; padding: 14px; border: none; border-radius: 12px; cursor: pointer; margin-bottom: 24px; transition: background 0.2s; }
+        .btn-calc:hover { background-color: #1d4ed8; }
+        .hidden { display: none !important; }
+        .result-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .tax-due-label { font-size: 12px; color: #94a3b8; }
+        .tax-due-val { font-size: 26px; font-weight: 900; color: #f43f5e; margin-top: 2px; }
+        .net-inc-label { font-size: 12px; color: #94a3b8; text-align: right; }
+        .net-inc-val { font-size: 22px; font-weight: 700; color: #ffffff; margin-top: 2px; text-align: right; }
+        .bracket-box { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .bracket-text { font-size: 14px; font-weight: 500; }
+        .bracket-highlight { color: #38bdf8; font-weight: 700; font-size: 16px; margin-left: 4px; }
+        .btn-export { background-color: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .btn-export:hover { background-color: #1d4ed8; }
+        .advisory-title-section { display: flex; align-items: center; gap: 8px; margin: 20px 0 10px 0; }
+        .advisory-bar { width: 4px; height: 16px; background-color: #2563eb; border-radius: 2px; }
+        .advisory-title { font-size: 11px; font-weight: 700; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.05em; }
+        .advisor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .advice-card { border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; min-height: 100px; }
+        .advice-red { background-color: #2d1a1e; border: 1px solid #7f1d1d; color: #fca5a5; }
+        .advice-green { background-color: #14532d; border: 1px solid #15803d; color: #86efac; }
+        .advice-header { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        .advice-sub { font-size: 10px; opacity: 0.8; margin-top: 2px; }
+        .advice-footer { font-size: 11px; font-weight: 700; margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
+        
+        /* สไตล์อนิเมชั่นน้องแมวหลากสี */
+        .cat-container { position: relative; height: 28px; margin-top: 12px; width: 100%; }
+        .climbing-cat {
+            position: absolute;
+            bottom: 4px;
+            left: 0%;
+            transition: left 0.5s ease-in-out;
+            font-size: 22px;
+            transform: translateX(-50%);
+            animation: bounceCat 1s infinite alternate;
+        }
+        @keyframes bounceCat {
+            0% { transform: translateX(-50%) translateY(0); }
+            100% { transform: translateX(-50%) translateY(-4px); }
+        }
+        
+        .floating-cats-header { display: flex; justify-content: center; gap: 12px; margin-bottom: 8px; font-size: 20px; }
+        .cat-wiggle { animation: wiggle 2s infinite ease-in-out; display: inline-block; }
+        .cat-jump { animation: jumpCat 0.6s infinite alternate; display: inline-block; }
+        .cat-spin { animation: spinCat 3s infinite linear; display: inline-block; }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-8deg); }
+            50% { transform: rotate(8deg); }
+        }
+        @keyframes jumpCat {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-5px); }
+        }
+        @keyframes spinCat {
+            0% { transform: scaleX(1); }
+            50% { transform: scaleX(-1); }
+            100% { transform: scaleX(1); }
+        }
+
+        .cat-badge { font-size: 16px; margin-left: 6px; }
+
+        .progress-section { margin-top: 16px; }
+        .progress-header { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; margin-bottom: 8px; color: #94a3b8; }
+        .progress-wrapper { width: 100%; background-color: #334155; border-radius: 9999px; height: 14px; overflow: hidden; display: flex; position: relative; }
+        .bar-taxable { background-color: #059669; height: 100%; transition: width 0.4s; }
+        .bar-expenses { background-color: #475569; height: 100%; transition: width 0.4s; }
+        .legend-container { display: flex; gap: 16px; margin-top: 10px; font-size: 10px; color: #94a3b8; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-color { width: 10px; height: 10px; border-radius: 2px; }
+        .slider-group { margin-top: 8px; }
+        .slider-group input[type="range"] { width: 100%; accent-color: #38bdf8; cursor: pointer; }
+        .info-note { font-size: 10px; color: #94a3b8; margin-top: 6px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="floating-cats-header">
+                <span class="cat-wiggle" title="แมวส้ม">🐱</span>
+                <span class="cat-wiggle" style="animation-delay: 0.3s;" title="แมวดำ">🐈‍⬛</span>
+                <span class="cat-jump" style="animation-delay: 0.2s;" title="เสือน้อย">🐅</span>
+                <span class="cat-spin" title="แมวเทา">😺</span>
+                <span class="cat-wiggle" style="animation-delay: 0.5s;" title="แมวตกใจ">🙀</span>
+            </div>
+            <h1>🐾วันวิสาข์ คำนวนภาษีค่าาา🙀</h1>
+            <p>ข้าราชการ ม.40(1) และวิชาชีพอิสระ ม.40(6)</p>
+        </div>
+
+        <!-- ผลลัพธ์การคำนวณ -->
+        <div id="resultBlock" class="dark-card">
+            <div class="result-row">
+                <div>
+                    <div class="tax-due-label">ภาษีที่ต้องจ่ายสุทธิ <span id="shockCat" style="font-size: 16px;"></span></div>
+                    <div id="resTax" class="tax-due-val">฿0</div>
+                </div>
+                <div>
+                    <div class="net-inc-label">เงินได้สุทธิ (ฐานภาษี)</div>
+                    <div id="resNet" class="net-inc-val">฿0</div>
+                </div>
+            </div>
+
+            <div class="bracket-box dark-card" style="background-color: #0f172a; margin-bottom: 12px; padding: 12px;">
+                <div class="bracket-text">ฐานภาษีปัจจุบันของคุณคือ <span id="resBracket" class="bracket-highlight">0% (ยกเว้น)</span></div>
+                <button class="btn-export" onclick="copyToClipboard()">
+                    📋 Export สรุปผลไปยัง LINE/Notes
+                </button>
+            </div>
+
+            <div class="advisory-title-section">
+                <div class="advisory-bar"></div>
+                <div class="advisory-title">คำแนะนำในการลดหย่อนภาษี (Tax Advisory)</div>
+            </div>
+
+            <div id="advisorGrid" class="advisor-grid">
+                <!-- Javascript จะเรนเดอร์การ์ดคำแนะนำตรงนี้ -->
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span id="resTotalGross">สรุปสัดส่วนเงินได้รวม (฿0)</span>
+                    <span id="resTotalDeduction">ลดหย่อนรวม ฿0</span>
+                </div>
+                <div class="progress-wrapper">
+                    <div id="barTaxable" class="bar-taxable" style="width: 0%;"></div>
+                    <div id="barExpenses" class="bar-expenses" style="width: 100%;"></div>
+                </div>
+                <!-- แมวเดินไต่ขึ้นฐานภาษีตามสัดส่วน -->
+                <div class="cat-container">
+                    <div id="climbingCat" class="climbing-cat">🐈</div>
+                </div>
+                <div class="legend-container">
+                    <div class="legend-item"><div class="legend-color" style="background-color: #059669;"></div> <span>ฐานภาษีที่ต้องเสีย</span></div>
+                    <div class="legend-item"><div class="legend-color" style="background-color: #475569;"></div> <span>ค่าใช้จ่าย & ลดหย่อน</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ฟอร์มกรอกข้อมูล -->
+        <div class="dark-card">
+            <h3><span>1. รายได้พึงประเมิน</span> <span id="catIncome" class="cat-badge cat-jump">😾</span></h3>
+            <div class="form-group">
+                <label>ม.40(1) เงินเดือนประจำ (ต่อปี)</label>
+                <input type="text" inputmode="numeric" id="income401" placeholder="0" class="input-dark format-money" oninput="processTax()">
+            </div>
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label style="margin-bottom: 0;">ม.40(6) วิชาชีพอิสระ</label>
+                    <div class="checkbox-container" style="margin-bottom: 0;">
+                        <input type="checkbox" id="isIndividualMonths" onchange="toggle406Input(); processTax();">
+                        <label for="isIndividualMonths">กรอกตามจริงแต่ละเดือน</label>
+                    </div>
+                </div>
+                <div id="estimate406Wrapper">
+                    <label style="font-size: 10px; color: #94a3b8; margin-bottom: 2px;">ประมาณการต่อเดือน (คูณ 12 เท่ากับทุกเดือน)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" inputmode="numeric" id="income406Monthly" placeholder="0" class="input-dark format-money" oninput="processTax()">
+                        <span id="res406TotalYear" style="font-size: 12px; color: #38bdf8; white-space: nowrap;">รวมปีละ: ฿0</span>
+                    </div>
+                </div>
+                <div id="individual406Wrapper" class="hidden">
+                    <label style="color: #fbbf24; font-size: 10px; margin-bottom: 6px; display: block;">ระบุรายได้แยกตามจริงแต่ละเดือน (สูงสุด 1,000,000 บ./เดือน)</label>
+                    <div class="month-grid">
+                        <div class="month-item"><span>ม.ค.</span><input type="text" inputmode="numeric" id="m406_0" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>ก.พ.</span><input type="text" inputmode="numeric" id="m406_1" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>มี.ค.</span><input type="text" inputmode="numeric" id="m406_2" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>เม.ย.</span><input type="text" inputmode="numeric" id="m406_3" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>พ.ค.</span><input type="text" inputmode="numeric" id="m406_4" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>มิ.ย.</span><input type="text" inputmode="numeric" id="m406_5" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>ก.ค.</span><input type="text" inputmode="numeric" id="m406_6" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>ส.ค.</span><input type="text" inputmode="numeric" id="m406_7" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>ก.ย.</span><input type="text" inputmode="numeric" id="m406_8" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>ต.ค.</span><input type="text" inputmode="numeric" id="m406_9" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>พ.ย.</span><input type="text" inputmode="numeric" id="m406_10" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                        <div class="month-item"><span>ธ.ค.</span><input type="text" inputmode="numeric" id="m406_11" placeholder="0" class="month-input format-money" oninput="processTax()"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dark-card">
+            <h3><span>2. ครอบครัว & ประกัน</span> <span id="catFamily" class="cat-badge cat-wiggle">😺</span></h3>
+            <div class="row-grid">
+                <div class="form-group">
+                    <label>บิดามารดา (คนละ 30k)</label>
+                    <select id="parentsCount" class="select-dark" onchange="processTax()">
+                        <option value="0" selected>0 คน</option>
+                        <option value="1">1 คน</option>
+                        <option value="2">2 คน</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ผู้พิการ (คนละ 60k)</label>
+                    <select id="disabledCount" class="select-dark" onchange="processTax()">
+                        <option value="0" selected>0 คน</option>
+                        <option value="1">1 คน</option>
+                        <option value="2">2 คน</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row-grid">
+                <div class="form-group">
+                    <label>ประกันชีวิต (สูงสุด 100k)</label>
+                    <input type="text" inputmode="numeric" id="lifeIns" placeholder="0" class="input-dark format-money" oninput="processTax()">
+                </div>
+                <div class="form-group">
+                    <label>ประกันสุขภาพ (สูงสุด 25k)</label>
+                    <input type="text" inputmode="numeric" id="healthIns" placeholder="0" class="input-dark format-money" oninput="processTax()">
+                </div>
+            </div>
+            <div class="row-grid">
+                <div class="form-group">
+                    <label>ดอกเบี้ยบ้าน (สูงสุด 100k)</label>
+                    <input type="text" inputmode="numeric" id="homeInterest" placeholder="0" class="input-dark format-money" oninput="processTax()">
+                </div>
+                <div class="form-group">
+                    <label>Easy E-Receipt (สูงสุด 50k)</label>
+                    <input type="text" inputmode="numeric" id="easyE" placeholder="0" class="input-dark format-money" oninput="processTax()">
+                </div>
+            </div>
+        </div>
+
+        <div class="dark-card">
+            <h3><span>3. กองทุนเกษียณ (รวมสูงสุด 15% & ไม่เกิน 500K)</span> <span id="catRetire" class="cat-badge cat-spin">🐯</span></h3>
+            <div class="form-group slider-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <label style="margin-bottom: 0;">สะสม กบข. (<span id="gpfPercentVal">0</span>%)</label>
+                    <span id="gpfAmountDisplay" style="font-size: 12px; color: #38bdf8; font-weight: 700;">฿0</span>
+                </div>
+                <input type="range" id="gpfPercent" min="0" max="30" value="0" oninput="updateGpfSlider(); processTax();">
+            </div>
+            <div class="form-group" style="margin-top: 12px;">
+                <label>กองทุน RMF</label>
+                <input type="text" inputmode="numeric" id="rmf" placeholder="0" class="input-dark format-money" oninput="processTax()">
+            </div>
+        </div>
+
+        <div class="dark-card">
+            <h3><span>4. เงินบริจาค</span> <span id="catDonate" class="cat-badge cat-jump">😻</span></h3>
+            <div class="row-grid">
+                <div class="form-group">
+                    <label>e-Donation (ลดหย่อน 2 เท่า)</label>
+                    <input type="text" inputmode="numeric" id="eDonation" placeholder="0" class="input-dark format-money" oninput="processTax()">
+                </div>
+                <div class="form-group">
+                    <label>พรรคการเมือง (สูงสุด 10k)</label>
+                    <input type="text" inputmode="numeric" id="politicalD" placeholder="0" class="input-dark format-money" oninput="processTax()">
+                </div>
+            </div>
+            <div class="info-note">
+                • สิทธิ์ลดหย่อน กบข. + RMF จะ: <span id="resRetirementUtilized" style="color: #38bdf8;">฿0</span><br>
+                • สิทธิ์ลดหย่อน e-Donation จะ: <span id="resEDonationUtilized" style="color: #38bdf8;">฿0</span>
+            </div>
+        </div>
+
+        <button class="btn-calc" onclick="processTax()">📊 ประมวลผลและคำนวณภาษี</button>
+    </div>
+
+    <script>
+        let summaryTextGlobal = "";
+
+        function getNum(id) {
+            const val = document.getElementById(id).value;
+            return parseFloat(val.replace(/,/g, '')) || 0;
+        }
+
+        document.addEventListener('input', function (e) {
+            if (e.target.classList.contains('format-money')) {
+                let cursorPosition = e.target.selectionStart;
+                let originalLength = e.target.value.length;
+                
+                let rawVal = e.target.value.replace(/[^0-9]/g, '');
+                if (rawVal === '') {
+                    e.target.value = '';
+                } else {
+                    e.target.value = Number(rawVal).toLocaleString('en-US');
+                }
+                
+                let newLength = e.target.value.length;
+                cursorPosition = cursorPosition + (newLength - originalLength);
+                e.target.setSelectionRange(cursorPosition, cursorPosition);
+            }
+        });
+
+        function toggle406Input() {
+            const isChecked = document.getElementById('isIndividualMonths').checked;
+            document.getElementById('estimate406Wrapper').classList.toggle('hidden', isChecked);
+            document.getElementById('individual406Wrapper').classList.toggle('hidden', !isChecked);
+        }
+
+        function updateGpfSlider() {
+            const val = document.getElementById('gpfPercent').value;
+            document.getElementById('gpfPercentVal').innerText = val;
+        }
+
+        function processTax() {
+            const income401 = getNum('income401');
+            let income406 = 0;
+            const isChecked = document.getElementById('isIndividualMonths').checked;
+            
+            if(!isChecked) {
+                const mon406 = getNum('income406Monthly');
+                income406 = Math.min(mon406, 1000000) * 12;
+                document.getElementById('res406TotalYear').innerText = "รวมปีละ: ฿" + income406.toLocaleString();
+            } else {
+                for(let i=0; i<12; i++) {
+                    let mVal = getNum('m406_' + i);
+                    income406 += Math.min(mVal, 1000000);
+                }
+            }
+
+            const totalGross = income401 + income406;
+            
+            // ลูกเล่นแมวตอบสนองตามรายได้หัวข้อที่ 1
+            const catIncome = document.getElementById('catIncome');
+            if (totalGross > 1500000) { catIncome.innerText = "💰🙀"; }
+            else if (totalGross > 600000) { catIncome.innerText = "😽"; }
+            else { catIncome.innerText = "😾"; }
+
+            const exp401 = Math.min(income401 * 0.5, 100000);
+            const exp406 = income406 * 0.60;
+            const totalExpense = exp401 + exp406;
+            const personalDeduct = 60000;
+            
+            const gpfPercent = Math.min(parseFloat(document.getElementById('gpfPercent').value) || 0, 30);
+            const gpfAmount = income401 * (gpfPercent / 100);
+            document.getElementById('gpfAmountDisplay').innerText = "฿" + gpfAmount.toLocaleString();
+
+            const rawLifeIns = getNum('lifeIns');
+            const rawHealthIns = Math.min(getNum('healthIns'), 25000);
+            const lifeAndHealthDeduct = Math.min(rawLifeIns + rawHealthIns, 100000);
+            
+            const rmfInput = getNum('rmf');
+            const retirementMaxCap = Math.min(totalGross * 0.15, 500000);
+            const totalRetirementUtilized = Math.min(gpfAmount + rmfInput, retirementMaxCap);
+
+            // ลูกเล่นแมวหัวข้อกองทุนเกษียณ
+            const catRetire = document.getElementById('catRetire');
+            if (totalRetirementUtilized > 100000) { catRetire.innerText = "🎉🐯"; }
+            else { catRetire.innerText = "🐯"; }
+
+            const parentsCountVal = parseFloat(document.getElementById('parentsCount').value) || 0;
+            const disabledCountVal = parseFloat(document.getElementById('disabledCount').value) || 0;
+            const parentsDeduct = parentsCountVal * 30000;
+            const disabledDeduct = disabledCountVal * 60000;
+            const homeInterestDeduct = Math.min(getNum('homeInterest'), 100000);
+            const easyEDeduct = Math.min(getNum('easyE'), 50000);
+            const politicalDeduct = Math.min(getNum('politicalD'), 10000);
+
+            // ลูกเล่นแมวหัวข้อครอบครัวและประกัน
+            const catFamily = document.getElementById('catFamily');
+            if ((parentsCountVal + disabledCountVal > 0) || (rawLifeIns > 0 || homeInterestDeduct > 0)) {
+                catFamily.innerText = "😻";
+            } else {
+                catFamily.innerText = "😺";
+            }
+
+            const subtotalDeductionsNoDonation = personalDeduct + lifeAndHealthDeduct + totalRetirementUtilized + parentsDeduct + disabledDeduct + homeInterestDeduct + easyEDeduct + politicalDeduct;
+            const incomeBeforeDonation = Math.max((totalGross - totalExpense) - subtotalDeductionsNoDonation, 0);
+            
+            const eDonationInput = getNum('eDonation');
+            const eDonationUtilized = Math.min(eDonationInput * 2, incomeBeforeDonation * 0.10);
+            const totalDeductions = subtotalDeductionsNoDonation + eDonationUtilized;
+
+            // ลูกเล่นแมวหัวข้อเงินบริจาค
+            const catDonate = document.getElementById('catDonate');
+            if (eDonationInput > 0 || politicalDeduct > 0) { catDonate.innerText = "💖😺"; }
+            else { catDonate.innerText = "😻"; }
+            
+            const netIncome = Math.max((totalGross - totalExpense) - totalDeductions, 0);
+
+            let tax = 0; 
+            let bracketStr = "0%";
+            if (netIncome <= 150000) { tax = 0; bracketStr = "0% (ยกเว้น)"; }
+            else if (netIncome <= 300000) { tax = (netIncome - 150000) * 0.05; bracketStr = "5%"; }
+            else if (netIncome <= 500000) { tax = 7500 + (netIncome - 300000) * 0.10; bracketStr = "10%"; }
+            else if (netIncome <= 750000) { tax = 27500 + (netIncome - 500000) * 0.15; bracketStr = "15%"; }
+            else if (netIncome <= 1000000) { tax = 65000 + (netIncome - 750000) * 0.20; bracketStr = "20%"; }
+            else if (netIncome <= 2000000) { tax = 115000 + (netIncome - 1000000) * 0.25; bracketStr = "25%"; }
+            else if (netIncome <= 5000000) { tax = 365000 + (netIncome - 2000000) * 0.30; bracketStr = "30%"; }
+            else { tax = 1265000 + (netIncome - 5000000) * 0.35; bracketStr = "35%"; }
+
+            document.getElementById('resTax').innerText = "฿" + tax.toLocaleString();
+            document.getElementById('resNet').innerText = "฿" + netIncome.toLocaleString();
+            document.getElementById('resBracket').innerText = bracketStr;
+            document.getElementById('resTotalGross').innerText = "สรุปสัดส่วนเงินได้รวม (฿" + totalGross.toLocaleString() + ")";
+            document.getElementById('resTotalDeduction').innerText = "ลดหย่อนรวม ฿" + totalDeductions.toLocaleString();
+
+            document.getElementById('resRetirementUtilized').innerText = "฿" + totalRetirementUtilized.toLocaleString();
+            document.getElementById('resEDonationUtilized').innerText = "฿" + eDonationUtilized.toLocaleString();
+
+            let taxablePercent = totalGross > 0 ? (netIncome / totalGross) * 100 : 0;
+            if (taxablePercent > 100) taxablePercent = 100;
+            if (taxablePercent < 0) taxablePercent = 0;
+
+            let combinedExAndDePercent = Math.max(100 - taxablePercent, 0);
+            document.getElementById('barTaxable').style.width = taxablePercent + "%";
+            document.getElementById('barExpenses').style.width = combinedExAndDePercent + "%";
+
+            // อัปเดตตำแหน่งน้องแมวไต่ตามหลอดเปอร์เซ็นต์
+            const climbingCat = document.getElementById('climbingCat');
+            climbingCat.style.left = taxablePercent + "%";
+            
+            const catsList = ['🐈', '🐈', '🐅', '🐆', '🐈‍⬛'];
+            let catIndex = Math.floor(taxablePercent / 20);
+            if(catIndex > 4) catIndex = 4;
+            climbingCat.innerText = catsList[catIndex];
+
+            // ระดับความตกใจของแมวตามยอดภาษีที่คุณลูกค้าต้องการ
+            const shockCat = document.getElementById('shockCat');
+            if (tax > 250000) {
+                shockCat.innerText = " 🙀🔥 (ลมแทบจับ! ภาษีพุ่งกระฉูด)";
+            } else if (tax > 150000) {
+                shockCat.innerText = " 😿💥 (โอ้โห หนักหน่วงมาก)";
+            } else if (tax > 100000) {
+                shockCat.innerText = " 🙀 (อุ๊ย! ภาษีแอบแพง)";
+            } else if (tax > 25000) {
+                shockCat.innerText = " 😾 (เริ่มจ่ายเยอะแล้วนะ)";
+            } else if (tax > 0) {
+                shockCat.innerText = " 😸";
+            } else {
+                shockCat.innerText = " 😺 (เย่ ภาษี 0 บาท สบายใจ)";
+            }
+
+            // Advisory Cards
+            const advisorGrid = document.getElementById('advisorGrid');
+            advisorGrid.innerHTML = "";
+
+            function renderCard(title, valLeft, maxVal, unitText) {
+                const isMaxed = valLeft <= 0;
+                const cardClass = isMaxed ? 'advice-green' : 'advice-red';
+                const statusTitle = isMaxed ? "(ใช้สิทธิ์เต็มแล้ว)" : "(ยังไม่เต็มสิทธิ์)";
+                const warningIcon = isMaxed ? "✓" : "⚠️";
+                
+                advisorGrid.innerHTML += `
+                    <div class="advice-card ${cardClass}">
+                        <div>
+                            <div class="advice-header">${warningIcon} ${title} <span style="font-size:9px; font-weight:normal;">${statusTitle}</span></div>
+                            <div class="advice-sub">สิทธิ์สูงสุด ${maxVal.toLocaleString()} ${unitText}</div>
+                        </div>
+                        <div class="advice-footer">${isMaxed ? 'สิทธิ์เต็มเพดานแล้ว' : 'ยังขาดอีก ฿' + valLeft.toLocaleString()}</div>
+                    </div>
+                `;
+            }
+
+            renderCard("ดอกเบี้ยบ้าน", 100000 - homeInterestDeduct, 100000, "บาท");
+            renderCard("Easy E-Receipt", 50000 - easyEDeduct, 50000, "บาท");
+            renderCard("ประกันชีวิต", 100000 - (rawLifeIns + rawHealthIns), 100000, "บาท");
+            
+            const leftoverRetire = Math.max(retirementMaxCap - totalRetirementUtilized, 0);
+            renderCard("RMF/กบข.", leftoverRetire, retirementMaxCap, "15%");
+
+            summaryTextGlobal = "📊 [สรุปภาษีทันตแพทย์ข้าราชการ]\n" +
+                "- รายได้รวมทั้งปี: ฿" + totalGross.toLocaleString() + "\n" +
+                "- เงินได้สุทธิ (ฐานภาษี): ฿" + netIncome.toLocaleString() + "\n" +
+                "- ฐานภาษีสูงสุด: " + bracketStr + "\n" +
+                "💰 ประมาณการภาษีรวมที่ต้องจ่าย: ฿" + tax.toLocaleString();
+        }
+
+        function copyToClipboard() {
+            if(!summaryTextGlobal) return;
+            navigator.clipboard.writeText(summaryTextGlobal).then(() => {
+                alert("📋 คัดลอกสรุปผลภาษีเรียบร้อย! สามารถนำไปแปะวางใน LINE หรือ Notes ได้ทันทีครับ");
+            }).catch(() => {
+                alert("ระบบเบราว์เซอร์บล็อกการคัดลอก กรุณาใช้วิธีแคปภาพหน้าจอเก็บไว้แทนนะครับ");
+            });
+        }
+    </script>
+</body>
+</html>
